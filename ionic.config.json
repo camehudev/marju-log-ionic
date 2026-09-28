@@ -1,0 +1,7 @@
+{
+  "name": "marju-log",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
