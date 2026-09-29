@@ -6,19 +6,9 @@ on:
   pull_request:
     branches: [ main, master ]
 
-name: Build Android APK
-
-on:
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
-
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write # Obrigatório para conseguir criar a Release no repositório
 
     steps:
       - name: Checkout repository
@@ -27,13 +17,13 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 22
+          node-version: 24
 
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
       - name: Build web assets
-        run: npm run build --configuration production
+        run: npm run build
 
       - name: Install Capacitor Android dependency
         run: npm install @capacitor/android
@@ -78,3 +68,5 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
