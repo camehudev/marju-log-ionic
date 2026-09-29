@@ -1,6 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { ExploreContainerComponent } from '../explore-container/explore-container.component';
-import { IonHeader, IonToolbar, IonTitle, IonContent, IonFab, IonFabButton, IonIcon} from '@ionic/angular';
+import { IonHeader, IonToolbar, IonTitle, IonContent, IonFab, IonFabButton, IonIcon, LoadingController} from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { add } from 'ionicons/icons';
 import { IonButton } from '@ionic/angular';
@@ -9,7 +9,7 @@ import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { ApiService } from '../services/api';
-// 👇 ADICIONE ESTA LINHA AQUI EM BAIXO:
+import { ToastController } from '@ionic/angular';
 
 
 
@@ -30,6 +30,8 @@ import { ApiService } from '../services/api';
    ]
 })
 export class Tab2Page {
+  private toastController = inject(ToastController);
+  private loadingController = inject(LoadingController); // Injetar o LoadingController
 
   // eslint-disable-next-line @angular-eslint/prefer-inject
   constructor(private cameraService: ApiService) {
@@ -42,41 +44,68 @@ export class Tab2Page {
   }
 
   capturedImage: string | undefined;
+  respostaApi: any; // Variável para armazenar a resposta da API
 
-  async abrirCameraEnviar() {
+  // Função auxiliar para mostrar o Toast
+  async apresentarToast(mensagem: string, cor: 'success' | 'danger' = 'danger') {
+    const toast = await this.toastController.create({
+      message: mensagem,
+      duration: 3000, // Duração em milissegundos (3 segundos)
+      position: 'bottom', // Pode ser 'top', 'middle' ou 'bottom'
+      color: cor, // 'danger' para vermelho (erros), 'success' para verde
+    });
+    await toast.present();
+  }
+
+ async abrirCameraEnviar() {
     try {
-      // 1. Abre a câmara do telemóvel
+
+      let loading: HTMLIonLoadingElement | null = null; // Variável para guardar a instância do loading
+
       const image = await Camera.getPhoto({
         quality: 90,
         allowEditing: false,
-        resultType: CameraResultType.Base64, // Ideal para enviar facilmente para APIs em formato string/base64
+        resultType: CameraResultType.Base64,
         source: CameraSource.Camera
       });
 
-      // Guarda a imagem temporariamente para mostrar no ecrã (opcional)
-      this.capturedImage = `data:image/jpeg;base64,${image.base64String}`;
+      if (image.base64String) {
+        this.capturedImage = `data:image/jpeg;base64,${image.base64String}`;
 
-      // 2. Prepara os dados para enviar à API
-      const payload = {
-        image: image.base64String,
-        timestamp: new Date().toISOString()
-      };
+        // 1. Converte a string Base64 num Blob consumível por FormData
+        const responseFetch = await fetch(this.capturedImage);
+        const blob = await responseFetch.blob();
 
-      this.cameraService.enviarImagem(this.capturedImage).subscribe({
-          next: (response) => {
-            console.log('Imagem enviada com sucesso:', response);
-            // Aqui pode adicionar lógica para mostrar uma mensagem de sucesso ao utilizador
+        // 2. Cria o FormData e adiciona com a chave 'file' (igual ao parâmetro do FastAPI)
+        const formData = new FormData();
+        formData.append('file', blob, 'foto.jpg');
+
+        loading = await this.loadingController.create({
+          message: 'Processando imagem...',
+        });
+        await loading.present();
+
+        // 3. Envia através do Service
+        this.cameraService.enviarImagem(formData).subscribe({
+          next: (response: any) => {
+            console.log('Imagem processada com sucesso pela API!', response);
+            this.respostaApi = response; // Armazena a resposta da API
+            loading?.dismiss();
+            // Aqui pode aproveitar os dados extraídos (ex: response.id_etiqueta, etc.)
           },
-          error: (error) => {
-            console.error('Erro ao enviar a imagem:', error);
-            // Aqui pode adicionar lógica para mostrar uma mensagem de erro ao utilizador
+          error: (err: any) => {
+            loading?.dismiss();
+            console.error('Erro ao enviar imagem:', err);
+            this.apresentarToast('Erro ao processar a imagem na API.');
           }
         });
+      }
 
-
-    } catch (error) {
-      console.error('Utilizador cancelou a câmara ou ocorreu um erro:', error);
+    } catch (error: any) {
+      console.error('Erro na câmara:', error);
+      this.apresentarToast('Não foi possível capturar a imagem.');
     }
   }
+
 
 }

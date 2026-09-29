@@ -11,12 +11,7 @@ export class ApiService {
 
   private apiUrl = 'http://127.0.0.1:8000/stock/scan-image';
 
-  enviarImagem(base64Image: string): Observable<any> {
-    const payload = {
-      image: base64Image,
-      timestamp: new Date().toISOString()
-    };
-
-    return this.http.post<any>(this.apiUrl, payload);
+  enviarImagem(formData: FormData): Observable<any> {
+    return this.http.post<any>(this.apiUrl, formData);
   }
 }
