@@ -10,8 +10,9 @@ export class ApiService {
   private http = inject(HttpClient);
 
   private apiUrl = 'http://127.0.0.1:8000/stock/scan-image';
+  private apiBase = 'https://pessoal-marju-express.sjj3wv.easypanel.host/stock/scan-image'
 
   enviarImagem(formData: FormData): Observable<any> {
-    return this.http.post<any>(this.apiUrl, formData);
+    return this.http.post<any>(this.apiBase, formData);
   }
 }
