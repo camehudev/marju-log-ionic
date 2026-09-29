@@ -51,7 +51,7 @@ export class Tab2Page {
     const toast = await this.toastController.create({
       message: mensagem,
       duration: 3000, // Duração em milissegundos (3 segundos)
-      position: 'bottom', // Pode ser 'top', 'middle' ou 'bottom'
+      position: 'middle', // Pode ser 'top', 'middle' ou 'bottom'
       color: cor, // 'danger' para vermelho (erros), 'success' para verde
     });
     await toast.present();
@@ -96,14 +96,14 @@ export class Tab2Page {
           error: (err: any) => {
             loading?.dismiss();
             console.error('Erro ao enviar imagem:', err);
-            this.apresentarToast('Erro ao processar a imagem na API.');
+            this.apresentarToast(`Erro ao processar a imagem na API: ${err.message}`);
           }
         });
       }
 
     } catch (error: any) {
       console.error('Erro na câmara:', error);
-      this.apresentarToast('Não foi possível capturar a imagem.');
+      this.apresentarToast(`Não foi possível capturar a imagem: ${error.message}`);
     }
   }
 
