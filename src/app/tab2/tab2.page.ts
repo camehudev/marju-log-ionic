@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { ExploreContainerComponent } from '../explore-container/explore-container.component';
 import { IonHeader, IonToolbar, IonTitle, IonContent, IonFab, IonFabButton, IonIcon, LoadingController} from '@ionic/angular';
 import { addIcons } from 'ionicons';
@@ -10,6 +10,9 @@ import { CommonModule } from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { ApiService } from '../services/api';
 import { ToastController } from '@ionic/angular';
+import { FormsModule } from '@angular/forms';
+import {ModalComponent} from '../components/modal/modal.component';
+import { FormsProdutosComponent } from '../components/forms/forms-produtos/forms-produtos.component';
 
 
 
@@ -21,17 +24,17 @@ import { ToastController } from '@ionic/angular';
     IonToolbar,
     IonTitle,
     IonContent,
-    ExploreContainerComponent,
+    ModalComponent,
     IonFab,
     IonFabButton,
     IonIcon,
-    IonButton,
     CommonModule,
-   ]
+    FormsModule, FormsProdutosComponent]
 })
 export class Tab2Page {
   private toastController = inject(ToastController);
   private loadingController = inject(LoadingController); // Injetar o LoadingController
+  private cd = inject(ChangeDetectorRef);
 
   // eslint-disable-next-line @angular-eslint/prefer-inject
   constructor(private cameraService: ApiService) {
@@ -57,11 +60,10 @@ export class Tab2Page {
     await toast.present();
   }
 
- async abrirCameraEnviar() {
+async abrirCameraEnviar() {
+    let loading: HTMLIonLoadingElement | null = null;
+
     try {
-
-      let loading: HTMLIonLoadingElement | null = null; // Variável para guardar a instância do loading
-
       const image = await Camera.getPhoto({
         quality: 90,
         allowEditing: false,
@@ -72,11 +74,9 @@ export class Tab2Page {
       if (image.base64String) {
         this.capturedImage = `data:image/jpeg;base64,${image.base64String}`;
 
-        // 1. Converte a string Base64 num Blob consumível por FormData
         const responseFetch = await fetch(this.capturedImage);
         const blob = await responseFetch.blob();
 
-        // 2. Cria o FormData e adiciona com a chave 'file' (igual ao parâmetro do FastAPI)
         const formData = new FormData();
         formData.append('file', blob, 'foto.jpg');
 
@@ -85,25 +85,38 @@ export class Tab2Page {
         });
         await loading.present();
 
-        // 3. Envia através do Service
+        // REMOVIDO o 'await' daqui, pois .subscribe() não é uma Promise
         this.cameraService.enviarImagem(formData).subscribe({
           next: (response: any) => {
-            console.log('Imagem processada com sucesso pela API!', response);
-            this.respostaApi = response; // Armazena a resposta da API
             loading?.dismiss();
-            // Aqui pode aproveitar os dados extraídos (ex: response.id_etiqueta, etc.)
+
+            if (response && response.endereco_organizado) {
+              this.respostaApi = response.endereco_organizado; // Atualiza a variável
+            } else {
+              this.apresentarToast('A API não retornou uma resposta válida.');
+            }
+
+            // FORÇA O ECRÃ A ATUALIZAR IMEDIATAMENTE
+            this.cd.detectChanges();
           },
           error: (err: any) => {
             loading?.dismiss();
             console.error('Erro ao enviar imagem:', err);
             this.apresentarToast(`Erro ao processar a imagem na API: ${err.message}`);
+
+            // FORÇA O ECRÃ A ATUALIZAR EM CASO DE ERRO
+            this.cd.detectChanges();
           }
         });
       }
 
     } catch (error: any) {
-      console.error('Erro na câmara:', error);
-      this.apresentarToast(`Não foi possível capturar a imagem: ${error.message}`);
+      loading?.dismiss();
+      if (error.message !== 'User cancelled photo app') {
+        console.error('Erro na câmara:', error);
+        this.apresentarToast(`Não foi possível capturar a imagem: ${error.message}`);
+        this.cd.detectChanges();
+      }
     }
   }
 

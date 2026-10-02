@@ -1,0 +1,46 @@
+<ion-modal [isOpen]="isModalOpen">
+  <ng-template>
+
+    <ion-header>
+      <ion-toolbar color="primary">
+        <ion-title>Revisar Dados da Etiqueta</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="isModalOpen = false">Fechar</ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content class="ion-padding">
+      <form [formGroup]="etiquetaForm" (ngSubmit)="salvarAlteracoes()">
+
+        <ion-item>
+          <ion-input label="Destinatário" labelPlacement="stacked" formControlName="destinatario" placeholder="Nome do destinatário"></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-input label="Rua" labelPlacement="stacked" formControlName="rua" placeholder="Nome da rua / número"></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-input label="Bairro" labelPlacement="stacked" formControlName="bairro" placeholder="Bairro"></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-input label="Cidade / UF" labelPlacement="stacked" formControlName="cidade_uf" placeholder="Ex: São Lourenço/MG"></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-input label="CEP" labelPlacement="stacked" formControlName="cep" placeholder="00000-000"></ion-input>
+        </ion-item>
+
+        <div class="ion-padding-top">
+          <ion-button expand="block" color="success" [disabled]="etiquetaForm.invalid" type="submit">
+            Guardar Dados Corrigidos
+          </ion-button>
+        </div>
+
+      </form>
+    </ion-content>
+
+  </ng-template>
+</ion-modal>

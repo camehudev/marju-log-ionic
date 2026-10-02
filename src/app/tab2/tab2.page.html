@@ -13,20 +13,32 @@
     </ion-toolbar>
   </ion-header>
 
-   <ion-content>
+
   <!-- Altere para slot="fixed" e as posições para bottom e end -->
   <ion-fab slot="fixed" vertical="bottom" horizontal="end" type="small">
     <ion-fab-button size="small" color="primary" (click)="abrirCameraEnviar()">
       <ion-icon name="add"></ion-icon>
     </ion-fab-button>
   </ion-fab>
-  </ion-content>
 
-<div class="ion-padding">
-<p>RESPOSTA API: </p>
-    <p>{{ respostaApi | json }}</p>
+
+@if (respostaApi) {
+  <div>
+     <app-modal [isModalOpen]="true" [dadosApi]="respostaApi"></app-modal>
+  </div>
+} @else {
+
+  <div class="flex flex-col items-center justify-center h-full">
+    <p>
+
+    </p>
 
   </div>
+
+
+}
+
+<app-forms-produtos [dadosApi]="respostaApi"></app-forms-produtos>
 
 
 </ion-content>
